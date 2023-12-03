@@ -14,7 +14,7 @@ def copy_object(
     s3_resource.meta.client.copy(copy_source, destination_bucket, destination_key)
 
 
-def main():
+def main(event, context):
     source_bucket = "hendriks-second-brain-dev"
     destination_bucket = "hendriks-second-brain-backup"
     max_workers = (
@@ -39,4 +39,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(None, None)
