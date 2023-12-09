@@ -17,9 +17,7 @@ def copy_object(
 def main(event, context):
     source_bucket = "hendriks-second-brain-dev"
     destination_bucket = "hendriks-second-brain-backup"
-    max_workers = (
-        1  # Adjust this number based on your requirements and system capabilities
-    )
+    max_workers = 3
 
     s3_resource = boto3.resource("s3")
     today = datetime.datetime.now().strftime("%Y-%m-%d")
