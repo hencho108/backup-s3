@@ -22,12 +22,11 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-root --no-interaction && rm -rf $POETRY_CACHE_DIR
 
 # The runtime image, used to just run the code provided the virtual environment
-FROM public.ecr.aws/lambda/python:3.9 as runtime
+FROM public.ecr.aws/lambda/python:3.9-arm64 as runtime
 
-COPY --from=build /app/.venv/lib/python3.9/site-packages /var/task/
-# COPY ./src src
+COPY --from=build /app/.venv/lib/python3.9/site-packages ${LAMBDA_TASK_ROOT}
+COPY ./src src
+COPY ./config config
 COPY main.py main.py
 
-ENTRYPOINT [ "python3" ]
-CMD [ "main.py" ]
-
+CMD [ "main.lambda_handler" ]

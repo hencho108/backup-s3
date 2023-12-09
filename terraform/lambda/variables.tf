@@ -1,4 +1,4 @@
-variable "ecr_repository_url" {
+variable "ecr_repository_uri" {
   description = "URL of the ECR repository"
   type        = string
 }

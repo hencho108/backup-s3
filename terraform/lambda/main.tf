@@ -32,7 +32,9 @@ resource "aws_iam_policy" "lambda_s3_access" {
           "s3:ListBucket"
         ],
         Resource = [
+          "arn:aws:s3:::${var.source_bucket_name}",
           "arn:aws:s3:::${var.source_bucket_name}/*",
+          "arn:aws:s3:::${var.backup_bucket_name}",
           "arn:aws:s3:::${var.backup_bucket_name}/*"
         ],
         Effect = "Allow",
@@ -48,19 +50,24 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_attach" {
 
 resource "aws_lambda_function" "lambda_function" {
   function_name = var.lambda_function_name
+  architectures = ["arm64"]
 
   role         = aws_iam_role.lambda_execution_role.arn
   package_type = "Image"
 
-  image_uri = "${var.ecr_repository_url}:latest"
+  image_uri = var.ecr_repository_uri
 
   timeout     = 900
-  memory_size = 512
+  memory_size = 128
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = var.backup_bucket_name
 }
 
 resource "aws_cloudwatch_event_rule" "trigger" {
   name                = var.cloudwatch_trigger_name
-  schedule_expression = "rate(1 day)"
+  schedule_expression = "cron(0 3 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda" {
