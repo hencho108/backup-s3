@@ -100,7 +100,7 @@ resource "aws_s3_bucket" "example" {
 # Cloudwatch event rule to trigger the lambda function
 resource "aws_cloudwatch_event_rule" "trigger" {
   name                = var.cloudwatch_trigger_name
-  schedule_expression = "cron(0 3 * * ? *)"
+  schedule_expression = var.schedule_expression
 }
 
 # Cloudwatch event target to associate the rule with the lambda function

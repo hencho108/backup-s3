@@ -38,3 +38,8 @@ variable "cloudwatch_trigger_name" {
   type        = string
 }
 
+variable "schedule_expression" {
+  description = "The schedule expression for the CloudWatch event rule"
+  type        = string
+  default     = "cron(0 3 * * ? *)" # Default to every day at 3 AM
+}
