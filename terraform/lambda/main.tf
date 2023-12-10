@@ -2,6 +2,7 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Lambda execution role
 resource "aws_iam_role" "lambda_execution_role" {
   name = var.execution_role_name
 
@@ -19,6 +20,7 @@ resource "aws_iam_role" "lambda_execution_role" {
   })
 }
 
+# Policy for S3 access
 resource "aws_iam_policy" "lambda_s3_access" {
   name = var.iam_policy_name
 
@@ -43,11 +45,40 @@ resource "aws_iam_policy" "lambda_s3_access" {
   })
 }
 
+# Policy for CloudWatch Logs
+resource "aws_iam_policy" "lambda_logging" {
+  name        = "lambda_logging"
+  description = "Allow Lambda functions to log to CloudWatch"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Effect   = "Allow",
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+# Attach S3 policy to role
 resource "aws_iam_role_policy_attachment" "lambda_s3_attach" {
   role       = aws_iam_role.lambda_execution_role.name
   policy_arn = aws_iam_policy.lambda_s3_access.arn
 }
 
+# Attach cloudwatch logs policy to role
+resource "aws_iam_role_policy_attachment" "lambda_logs_attach" {
+  role       = aws_iam_role.lambda_execution_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+# Lambda function
 resource "aws_lambda_function" "lambda_function" {
   function_name = var.lambda_function_name
   architectures = ["arm64"]
@@ -61,20 +92,24 @@ resource "aws_lambda_function" "lambda_function" {
   memory_size = 128
 }
 
+# Create S# bucket for backups
 resource "aws_s3_bucket" "example" {
   bucket = var.backup_bucket_name
 }
 
+# Cloudwatch event rule to trigger the lambda function
 resource "aws_cloudwatch_event_rule" "trigger" {
   name                = var.cloudwatch_trigger_name
   schedule_expression = "cron(0 3 * * ? *)"
 }
 
+# Cloudwatch event target to associate the rule with the lambda function
 resource "aws_cloudwatch_event_target" "lambda" {
   rule = aws_cloudwatch_event_rule.trigger.name
   arn  = aws_lambda_function.lambda_function.arn
 }
 
+# Lambda permission to allow cloudwatch events to invoke the lambda function
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
